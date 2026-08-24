@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İmece | İhtiyaç Sahibi Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body { 
+            background-color: #f4f7f6; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .navbar { background-color: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: background-color 0.3s ease; }
+        .brand-text { color: #198754; font-weight: 900; font-size: 1.7rem; letter-spacing: -0.5px; }
+        .form-card { border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.04); background: #fff; transition: background-color 0.3s ease; }
+        .stat-card { border-radius: 16px; border: none; transition: all 0.3s ease; overflow: hidden; position: relative; }
+        .stat-card:hover { transform: translateY(-7px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .stat-icon { position: absolute; right: -10px; bottom: -20px; font-size: 6rem; opacity: 0.15; }
+        .bg-gradient-primary { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); }
+        .bg-gradient-warning { background: linear-gradient(135deg, #f59f00 0%, #f08c00 100%); }
+        .bg-gradient-success { background: linear-gradient(135deg, #20c997 0%, #198754 100%); }
+        .ticket-card { background: #fff; border-radius: 12px; border-left: 6px dashed #198754; box-shadow: 0 4px 15px rgba(0,0,0,0.04); transition: transform 0.2s, background-color 0.3s ease; }
+        .ticket-card:hover { transform: scale(1.02); }
+        .ticket-card.used { border-left-color: #6c757d; opacity: 0.7; }
+        .kupon-kodu { font-family: 'Courier New', Courier, monospace; font-size: 1.4rem; letter-spacing: 4px; color: #198754; }
+        .modern-table { background: white; border-radius: 16px; padding: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: background-color 0.3s ease;}
+        .table>:not(caption)>*>* { border-bottom-color: #f0f0f0; padding: 1rem; }
+
+        /* === YENİ: ÖZEL ARAMA LİSTESİ CSS === */
+        .custom-dropdown-menu { max-height: 200px; overflow-y: auto; display: none; position: absolute; top: 100%; left: 0; z-index: 1050; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; border-top: none; }
+        .custom-dropdown-item { padding: 8px 15px; cursor: pointer; transition: 0.2s; }
+        .custom-dropdown-item:hover { background-color: #e9ecef; color: #198754; font-weight: bold; }
+
+        /* GECE MODU CSS */
+        [data-bs-theme="dark"] body { background-color: #121212 !important; color: #e0e0e0; }
+        [data-bs-theme="dark"] .navbar { background-color: #1e1e1e !important; border-bottom: 1px solid #333; box-shadow: none; }
+        [data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .bg-light, [data-bs-theme="dark"] .form-card, [data-bs-theme="dark"] .modern-table, [data-bs-theme="dark"] .ticket-card { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+        [data-bs-theme="dark"] .text-dark, [data-bs-theme="dark"] h1, [data-bs-theme="dark"] h2, [data-bs-theme="dark"] h3, [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h5, [data-bs-theme="dark"] h6 { color: #ffffff !important; }
+        [data-bs-theme="dark"] .text-muted, [data-bs-theme="dark"] .text-secondary { color: #a0a0a0 !important; }
+        [data-bs-theme="dark"] .form-control, [data-bs-theme="dark"] .form-select { background-color: #2b2b2b !important; border-color: #444 !important; color: #fff !important; }
+        [data-bs-theme="dark"] .form-control::placeholder { color: #888 !important; }
+        [data-bs-theme="dark"] .table { color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .table-light th, [data-bs-theme="dark"] .table-light td { background-color: #2b2b2b !important; color: #fff !important; border-color: #444 !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover td { background-color: #333 !important; color: #fff !important; }
+        [data-bs-theme="dark"] .table td, [data-bs-theme="dark"] .table th { border-color: #444 !important; background-color: transparent !important; }
+        
+        [data-bs-theme="dark"] .custom-dropdown-menu { background-color: #2b2b2b !important; border-color: #444 !important; }
+        [data-bs-theme="dark"] .custom-dropdown-item { color: #e0e0e0; }
+        [data-bs-theme="dark"] .custom-dropdown-item:hover { background-color: #333 !important; color: #20c997 !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg py-3 mb-5">
+        <div class="container">
+            <a class="navbar-brand brand-text" href="#"><i class="bi bi-heart-pulse-fill me-2 text-success"></i>İMECE</a>
+            <div class="d-flex align-items-center">
+                <div class="me-4 text-secondary">
+                    <i class="bi bi-person-circle fs-5 me-1 align-middle"></i>
+                    <span class="align-middle">Hoş geldin, <strong class="text-dark">{{ session['adsoyad'] }}</strong></span>
+                </div>
+                <a href="/profil" class="btn btn-outline-secondary btn-sm me-2">👤 Profilim</a>
+
+                <button class="btn btn-outline-secondary border-0 me-2 rounded-circle shadow-sm" id="themeToggle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </button>
+                <a href="/logout" class="btn btn-light text-danger fw-bold border-0 shadow-sm"><i class="bi bi-box-arrow-right me-1"></i>Çıkış</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm fw-bold" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row mb-5 g-4">
+            <div class="col-md-4">
+                <div class="card stat-card bg-gradient-primary text-white p-4 h-100">
+                    <i class="bi bi-ui-checks-grid stat-icon text-white"></i>
+                    <h1 class="display-4 fw-bold mb-0">{{ toplam }}</h1>
+                    <p class="mb-0 fs-5 opacity-75">Toplam Talebim</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-gradient-warning text-white p-4 h-100">
+                    <i class="bi bi-hourglass-split stat-icon text-white"></i>
+                    <h1 class="display-4 fw-bold mb-0">{{ bekleyen }}</h1>
+                    <p class="mb-0 fs-5 opacity-75">Bekleyen Talepler</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-gradient-success text-white p-4 h-100">
+                    <i class="bi bi-check2-circle stat-icon text-white"></i>
+                    <h1 class="display-4 fw-bold mb-0">{{ karsilanan }}</h1>
+                    <p class="mb-0 fs-5 opacity-75">Karşılanan Talepler</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="form-card p-4 border-top border-5 border-success">
+                    <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-plus-circle-fill text-success me-2"></i>Yeni Talep İlet</h4>
+                    <form action="/talep_olustur" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Neye İhtiyacınız Var?</label>
+                            <select class="form-select form-select-lg bg-light border-0" name="kategori" required>
+                                <option value="" selected disabled>Lütfen listeden seçin...</option>
+                                <optgroup label="Gıda Yardımı">
+                                    <option value="Temel Erzak Kolisi">Temel Erzak Kolisi</option>
+                                    <option value="Bebek Maması">Bebek Maması</option>
+                                    <option value="Glutensiz Paket">Glutensiz Gıda Paketi</option>
+                                </optgroup>
+                                <optgroup label="Giyim Yardımı">
+                                    <option value="Kışlık Bot">Kışlık Bot</option>
+                                    <option value="Kışlık Mont">Kışlık Mont</option>
+                                    <option value="Okul Üniforması">Okul Üniforması</option>
+                                    <option value="Bebek Zıbın Seti">Bebek Zıbın Seti</option>
+                                </optgroup>
+                                <optgroup label="Eğitim Yardımı">
+                                    <option value="Kırtasiye Seti">Kırtasiye Seti</option>
+                                    <option value="Eğitim Tableti">Eğitim Tableti</option>
+                                    <option value="Okul Çantası">Okul Çantası</option>
+                                </optgroup>
+                                <optgroup label="Sağlık ve Yaşam">
+                                    <option value="Tekerlekli Sandalye">Tekerlekli Sandalye</option>
+                                    <option value="Hasta Bezi">Hasta Bezi</option>
+                                    <option value="Hijyen Paketi">Hijyen Paketi</option>
+                                    <option value="Yakacak (Kömür)">Yakacak (Kömür)</option>
+                                    <option value="İşitme Cihazı Pili">İşitme Cihazı Pili</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Adet</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-box"></i></span>
+                                    <input type="number" name="adet" class="form-control bg-light border-0 px-1 text-center" min="1" value="1" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-8">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Konum (İl)</label>
+                                <div class="input-group position-relative">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt"></i></span>
+                                    <input type="text" name="konum" id="sehirSecimi" class="form-control bg-light border-0 fw-bold" required placeholder="İl yazın..." autocomplete="off">
+                                    <div id="sehirListesi" class="custom-dropdown-menu w-100 bg-white shadow-sm">
+                                        </div>
+                                </div>
+                            </div>
+                            </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Teslimat Noktası</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-shop text-primary"></i></span>
+                                <select name="esnaf_id" id="esnafSecimi" class="form-select bg-light border-0">
+                                    <option value="">Önce il seçiniz...</option>
+                                </select>
+                            </div>
+                            <div id="esnafUyari" class="form-text mt-2 text-warning fw-bold d-none" style="font-size: 0.75rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>Bu bölgede aktif esnaf yok. Talebiniz merkezi onaya düşecektir.
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Kısa Açıklama (İsteğe Bağlı)</label>
+                            <textarea name="detay" class="form-control bg-light border-0" rows="2" placeholder="Durumunuzu özetleyin..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow"><i class="bi bi-send-fill me-2"></i>TALEBİ SİSTEME İLET</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-gift-fill text-success me-2"></i>Bana Gelen Yardım Kuponları</h4>
+                <div class="row mb-5">
+                    {% if kuponlar %}
+                        {% for kupon in kuponlar %}
+                        <div class="col-md-6 mb-3">
+                            <div class="ticket-card p-3 {% if kupon[2] != 'Active' %}used{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge {% if kupon[2] == 'Active' %}bg-success{% else %}bg-secondary{% endif %} rounded-pill px-3 py-2">
+                                        {% if kupon[2] == 'Active' %}<i class="bi bi-check-circle-fill me-1"></i>Esnafa Göster{% else %}<i class="bi bi-lock-fill me-1"></i>Kullanıldı{% endif %}
+                                    </span>
+                                    <small class="text-muted fw-bold"><i class="bi bi-bag-heart me-1"></i>{{ kupon[1] }}</small>
+                                </div>
+                                <div class="text-center py-2 bg-light rounded mt-3 border">
+                                    <span class="kupon-kodu {% if kupon[2] != 'Active' %}text-secondary text-decoration-line-through{% endif %}">{{ kupon[0] }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12 text-center py-5 bg-white rounded-4 shadow-sm">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3 fw-bold">Henüz size tanımlanmış bir yardım kuponu bulunmuyor.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-clock-history text-primary me-2"></i>Geçmiş Taleplerim</h4>
+                <div class="modern-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary small text-uppercase">
+                                    <th>İhtiyaç Kategori̇si̇</th>
+                                    <th class="text-center">Adet</th>
+                                    <th>Tarih</th>
+                                    <th class="text-end">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if talepler %}
+                                    {% for talep in talepler %}
+                                    <tr>
+                                        <td><strong class="text-dark">{{ talep[2] }}</strong></td>
+                                        <td class="text-center"><span class="badge bg-light text-dark border">{{ talep[7] }}</span></td>
+                                        <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ talep[6] }}</td>
+                                        <td class="text-end">
+                                            {% if talep[5] == 'Beklemede' %}
+                                                <span class="text-warning fw-bold"><i class="bi bi-hourglass-split me-1"></i>Bekliyor</span>
+                                            {% else %}
+                                                <span class="text-success fw-bold"><i class="bi bi-check-all me-1"></i>Karşılandı</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center py-4 text-muted fw-bold">Henüz bir talep oluşturmadınız.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const iller = [
+            "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+        ];
+
+        const tumEsnaflar = [
+            {% for esnaf in esnaflar %}
+                { id: "{{ esnaf[0] }}", isim: "{{ esnaf[1] }}", sehir: "{{ esnaf[2] }}" }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        const sehirSecimi = document.getElementById('sehirSecimi');
+        const sehirListesi = document.getElementById('sehirListesi');
+
+        // Şehir Arama Motoru
+        function listeyiDoldur(arama = '') {
+            sehirListesi.innerHTML = '';
+            const val = arama.toLocaleLowerCase('tr-TR');
+            const filtrelenenler = iller.filter(il => il.toLocaleLowerCase('tr-TR').includes(val));
+            
+            if (filtrelenenler.length > 0) {
+                filtrelenenler.forEach(il => {
+                    const div = document.createElement('div');
+                    div.className = 'custom-dropdown-item';
+                    div.textContent = il;
+                    div.onclick = function() {
+                        sehirSecimi.value = il;
+                        sehirListesi.style.display = 'none';
+                        esnafFiltrele();
+                    };
+                    sehirListesi.appendChild(div);
+                });
+                sehirListesi.style.display = 'block';
+            } else {
+                sehirListesi.style.display = 'none';
+            }
+        }
+
+        sehirSecimi.addEventListener('input', function() { listeyiDoldur(this.value); esnafFiltrele(); });
+        sehirSecimi.addEventListener('focus', function() { listeyiDoldur(this.value); });
+        
+        // Dışarı tıklanınca listeyi kapat
+        document.addEventListener('click', function(e) {
+            if (e.target !== sehirSecimi && e.target !== sehirListesi) { sehirListesi.style.display = 'none'; }
+        });
+
+        // Esnaf Filtreleme
+        function esnafFiltrele() {
+            const secilenSehir = document.getElementById("sehirSecimi").value;
+            const esnafKutusu = document.getElementById("esnafSecimi");
+            const uyariMetni = document.getElementById("esnafUyari");
+            
+            esnafKutusu.innerHTML = "";
+            let esnafBulundu = false;
+
+            tumEsnaflar.forEach(esnaf => {
+                if (esnaf.sehir === secilenSehir) {
+                    const secenek = document.createElement("option");
+                    secenek.value = esnaf.id;
+                    secenek.text = esnaf.isim + " (Teslimat Noktası)";
+                    esnafKutusu.appendChild(secenek);
+                    esnafBulundu = true;
+                }
+            });
+
+            if (!esnafBulundu && secilenSehir.length > 2) {
+                const secenek = document.createElement("option");
+                secenek.value = "";
+                secenek.text = "Bu bölgede esnaf bulunamadı";
+                esnafKutusu.appendChild(secenek);
+                uyariMetni.classList.remove("d-none"); 
+                esnafKutusu.disabled = true; 
+            } else if (esnafBulundu) {
+                uyariMetni.classList.add("d-none"); 
+                esnafKutusu.disabled = false; 
+            } else {
+                const secenek = document.createElement("option");
+                secenek.value = "";
+                secenek.text = "Önce il seçiniz...";
+                esnafKutusu.appendChild(secenek);
+                uyariMetni.classList.add("d-none"); 
+                esnafKutusu.disabled = false;
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        const savedTheme = localStorage.getItem('imece_theme') || 'light';
+        htmlElement.setAttribute('data-bs-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('imece_theme', newTheme);
+                updateIcon(newTheme);
+            });
+        }
+
+        function updateIcon(theme) {
+            if (!themeIcon || !themeToggleBtn) return;
+            if(theme === 'dark') {
+                themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                themeIcon.classList.replace('text-secondary', 'text-warning');
+                themeToggleBtn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+            } else {
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                themeIcon.classList.replace('text-warning', 'text-secondary');
+                themeToggleBtn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+            }
+        }
+    </script>
+</body>
+</html>

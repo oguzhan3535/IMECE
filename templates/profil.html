@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İmece | Profilim</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', system-ui, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        .navbar { background-color: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: background-color 0.3s ease; }
+        .card-custom { border-radius: 16px; border: none; box-shadow: 0 8px 25px rgba(0,0,0,0.04); background: #fff; transition: background-color 0.3s ease; }
+        .profile-icon { font-size: 5rem; color: #198754; }
+
+        /* === GECE MODU (DARK MODE) ÖZEL CSS'İ === */
+        [data-bs-theme="dark"] body { background-color: #121212 !important; color: #e0e0e0; }
+        [data-bs-theme="dark"] .navbar { background-color: #1e1e1e !important; border-bottom: 1px solid #333; box-shadow: none; }
+        [data-bs-theme="dark"] .card-custom, [data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .bg-light { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+        [data-bs-theme="dark"] .text-dark, [data-bs-theme="dark"] h3, [data-bs-theme="dark"] h4 { color: #ffffff !important; }
+        [data-bs-theme="dark"] .text-muted, [data-bs-theme="dark"] .text-secondary { color: #a0a0a0 !important; }
+        [data-bs-theme="dark"] .form-control { background-color: #2b2b2b !important; border-color: #444 !important; color: #fff !important; }
+        [data-bs-theme="dark"] .form-control::placeholder { color: #888 !important; }
+        [data-bs-theme="dark"] .input-group-text { background-color: #2b2b2b !important; border-color: #444 !important; color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .shadow-sm { box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important; }
+        [data-bs-theme="dark"] .border-dark { border-color: #444 !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg py-3 mb-5">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold text-success" href="#"><i class="bi bi-person-bounding-box me-2"></i>HESAP YÖNETİMİ</a>
+            
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary border-0 rounded-circle shadow-sm" id="themeToggle" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </button>
+                {% if session['rol'] == 'Admin' %}
+                    <a href="/admin" class="btn btn-outline-secondary fw-bold"><i class="bi bi-arrow-left me-1"></i>Panele Dön</a>
+                {% elif session['rol'] == 'Esnaf' %}
+                    <a href="/esnaf" class="btn btn-outline-secondary fw-bold"><i class="bi bi-arrow-left me-1"></i>Panele Dön</a>
+                {% elif session['rol'] == 'Bagisci' %}
+                    <a href="/bagisci" class="btn btn-outline-secondary fw-bold"><i class="bi bi-arrow-left me-1"></i>Panele Dön</a>
+                {% else %}
+                    <a href="/ihtiyac" class="btn btn-outline-secondary fw-bold"><i class="bi bi-arrow-left me-1"></i>Panele Dön</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} fw-bold text-center shadow-sm"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center g-4">
+            
+            <div class="col-md-5">
+                <div class="card card-custom p-4 text-center h-100 border-top border-5 border-success">
+                    <i class="bi bi-person-circle profile-icon mb-3"></i>
+                    <h3 class="fw-bold text-dark">{{ kullanici[0] }}</h3>
+                    <p class="text-muted mb-4"><i class="bi bi-envelope-at-fill me-2"></i>{{ kullanici[1] }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2">
+                        <span class="text-secondary fw-bold small">Hesap Türü:</span>
+                        <span class="badge bg-success fs-6">{{ kullanici[2] }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2">
+                        <span class="text-secondary fw-bold small">Kayıt Tarihi:</span>
+                        <span class="text-dark fw-bold small">{{ kullanici[3] }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded">
+                        <span class="text-secondary fw-bold small">Hizmet Şehri:</span>
+                        <span class="text-dark fw-bold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ kullanici[4] }}</span>
+                    </div>
+                    </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card card-custom p-4 mb-4 border-top border-5 border-dark">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-shield-lock-fill text-dark me-2"></i>Şifre Değiştir</h4>
+                    
+                    <form action="/profil" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Mevcut Şifreniz</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-unlock"></i></span>
+                                <input type="password" class="form-control bg-light border-0" name="eski_sifre" required placeholder="Şu anki şifrenizi girin">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Yeni Şifreniz</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-key-fill text-success"></i></span>
+                                <input type="password" class="form-control bg-light border-0" name="yeni_sifre" required placeholder="Yeni ve güçlü bir şifre belirleyin">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark w-100 fw-bold py-2 shadow-sm"><i class="bi bi-check-circle-fill me-2"></i>Şifremi Güncelle</button>
+                    </form>
+                </div>
+
+                {% if session['rol'] == 'Esnaf' %}
+                <div class="card card-custom border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Hizmet Şehri Güncelle</h5>
+                        <form action="/profil/sehir_guncelle" method="POST">
+                            <div class="input-group mb-3">
+                                <input type="text" name="yeni_sehir" class="form-control" list="illerListesi" placeholder="Yeni hizmet şehrinizi yazın..." required>
+                                <button type="submit" class="btn btn-outline-success">Güncelle</button>
+                            </div>
+                            <datalist id="illerListesi">
+                                <option value="Adana"><option value="Adıyaman"><option value="Afyonkarahisar"><option value="Ağrı"><option value="Amasya"><option value="Ankara"><option value="Antalya"><option value="Artvin"><option value="Aydın"><option value="Balıkesir"><option value="Bilecik"><option value="Bingöl"><option value="Bitlis"><option value="Bolu"><option value="Burdur"><option value="Bursa"><option value="Çanakkale"><option value="Çankırı"><option value="Çorum"><option value="Denizli"><option value="Diyarbakır"><option value="Edirne"><option value="Elazığ"><option value="Erzincan"><option value="Erzurum"><option value="Eskişehir"><option value="Gaziantep"><option value="Giresun"><option value="Gümüşhane"><option value="Hakkari"><option value="Hatay"><option value="Isparta"><option value="Mersin"><option value="İstanbul"><option value="İzmir"><option value="Kars"><option value="Kastamonu"><option value="Kayseri"><option value="Kırklareli"><option value="Kırşehir"><option value="Kocaeli"><option value="Konya"><option value="Kütahya"><option value="Malatya"><option value="Manisa"><option value="Kahramanmaraş"><option value="Mardin"><option value="Muğla"><option value="Muş"><option value="Nevşehir"><option value="Niğde"><option value="Ordu"><option value="Rize"><option value="Sakarya"><option value="Samsun"><option value="Siirt"><option value="Sinop"><option value="Sivas"><option value="Tekirdağ"><option value="Tokat"><option value="Trabzon"><option value="Tunceli"><option value="Şanlıurfa"><option value="Uşak"><option value="Van"><option value="Yozgat"><option value="Zonguldak"><option value="Aksaray"><option value="Bayburt"><option value="Karaman"><option value="Kırıkkale"><option value="Batman"><option value="Şırnak"><option value="Bartın"><option value="Ardahan"><option value="Iğdır"><option value="Yalova"><option value="Karabük"><option value="Kilis"><option value="Osmaniye"><option value="Düzce">
+                            </datalist>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        const savedTheme = localStorage.getItem('imece_theme') || 'light';
+        htmlElement.setAttribute('data-bs-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('imece_theme', newTheme);
+                updateIcon(newTheme);
+            });
+        }
+
+        function updateIcon(theme) {
+            if (!themeIcon || !themeToggleBtn) return;
+            if(theme === 'dark') {
+                themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                themeIcon.classList.replace('text-secondary', 'text-warning');
+                themeToggleBtn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+            } else {
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                themeIcon.classList.replace('text-warning', 'text-secondary');
+                themeToggleBtn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

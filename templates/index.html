@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İmece | Sosyal Yardımlaşma Platformu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .navbar { background-color: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: background-color 0.3s ease; }
+        .brand-text { color: #198754; font-weight: 900; font-size: 1.8rem; letter-spacing: -1px; }
+        
+        /* 3 Ayrı Giriş Kapısı İçin Kart Tasarımları */
+        .login-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            overflow: hidden;
+        }
+        .login-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+        
+        /* Kartların Üst Renk Bantları */
+        .card-header-ihtiyac { background: linear-gradient(135deg, #20c997 0%, #198754 100%); color: white; }
+        .card-header-bagisci { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; }
+        .card-header-esnaf { background: linear-gradient(135deg, #f59f00 0%, #e67e22 100%); color: white; }
+        
+        /* Admin Gizli Butonu */
+        .admin-btn { background-color: transparent; color: #6c757d; border: 1px solid #dee2e6; transition: all 0.2s; }
+        .admin-btn:hover { background-color: #343a40; color: white; border-color: #343a40; }
+        
+        .hero-title { font-weight: 800; color: #2b2b2b; transition: color 0.3s ease; }
+
+        /* ========================================= */
+        /* === GECE MODU (DARK MODE) ÖZEL CSS'İ === */
+        /* ========================================= */
+        [data-bs-theme="dark"] body { background-color: #121212 !important; color: #e0e0e0; }
+        [data-bs-theme="dark"] .navbar { background-color: #1e1e1e !important; border-bottom: 1px solid #333; box-shadow: none; }
+        [data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .bg-light { background-color: #1e1e1e !important; color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .text-dark { color: #f8f9fa !important; }
+        [data-bs-theme="dark"] .text-muted { color: #a0a0a0 !important; }
+        [data-bs-theme="dark"] .hero-title { color: #ffffff !important; }
+        [data-bs-theme="dark"] .login-card, [data-bs-theme="dark"] .shadow-sm { box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important; background-color: #1e1e1e !important; }
+        [data-bs-theme="dark"] .input-group-text, [data-bs-theme="dark"] .form-control { background-color: #2b2b2b !important; border-color: #444 !important; color: #fff !important; }
+        [data-bs-theme="dark"] .form-control::placeholder { color: #888 !important; }
+        [data-bs-theme="dark"] .modal-content { background-color: #1e1e1e !important; border: 1px solid #333 !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg py-3">
+        <div class="container">
+            <a class="navbar-brand brand-text" href="#"><i class="bi bi-heart-pulse-fill me-2 text-success"></i>İMECE</a>
+            
+            <div class="d-flex align-items-center">
+                <a href="/kayit" class="btn btn-outline-success fw-bold me-3 shadow-sm"><i class="bi bi-person-plus-fill me-1"></i>Sisteme Kayıt Ol</a>
+                
+                <button type="button" class="btn admin-btn btn-sm fw-bold px-3 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#adminModal">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Yetkili
+                </button>
+
+                <button class="btn btn-outline-secondary border-0 ms-2 rounded-circle shadow-sm" id="themeToggle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-moon-stars-fill fs-5" id="themeIcon"></i>
+                </button>
+                </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show text-center fw-bold shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row text-center mt-2 mb-5">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="p-3 bg-white shadow-sm rounded-4 border-bottom border-success border-4 h-100 transition-all">
+                    <i class="bi bi-people-fill text-success display-5 mb-2"></i>
+                    <h2 class="fw-bold mb-0 sayac text-dark" data-hedef="{{ t_bagisci }}">0</h2>
+                    <p class="text-muted small text-uppercase fw-bold mt-1 mb-0">Gönüllü Bağışçı</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="p-3 bg-white shadow-sm rounded-4 border-bottom border-primary border-4 h-100 transition-all">
+                    <i class="bi bi-megaphone-fill text-primary display-5 mb-2"></i>
+                    <h2 class="fw-bold mb-0 sayac text-dark" data-hedef="{{ t_talep }}">0</h2>
+                    <p class="text-muted small text-uppercase fw-bold mt-1 mb-0">Açılan Talep</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="p-3 bg-white shadow-sm rounded-4 border-bottom border-warning border-4 h-100 transition-all">
+                    <i class="bi bi-box-seam-fill text-warning display-5 mb-2"></i>
+                    <h2 class="fw-bold mb-0 sayac text-dark" data-hedef="{{ t_teslim }}">0</h2>
+                    <p class="text-muted small text-uppercase fw-bold mt-1 mb-0">Teslim Edilen Ürün</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="p-3 bg-white shadow-sm rounded-4 border-bottom border-info border-4 h-100 transition-all">
+                    <i class="bi bi-emoji-smile-fill text-info display-5 mb-2"></i>
+                    <h2 class="fw-bold mb-0 sayac text-dark" data-hedef="{{ t_tamamlanan }}">0</h2>
+                    <p class="text-muted small text-uppercase fw-bold mt-1 mb-0">Dokunulan Hayat</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mb-5 mt-2">
+            <h1 class="hero-title display-5">İyiliğin Dijital Köprüsü</h1>
+            <p class="text-muted fs-5">Lütfen sisteme giriş yapmak istediğiniz rolü seçiniz.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            
+            <div class="col-md-4">
+                <div class="card login-card h-100">
+                    <div class="card-header-ihtiyac text-center py-4">
+                        <i class="bi bi-house-heart-fill display-4"></i>
+                        <h4 class="fw-bold mt-2 mb-0">İhtiyaç Sahibi Girişi</h4>
+                    </div>
+                    <div class="card-body p-4 bg-white">
+                        <form action="/login" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold text-uppercase">E-Posta Adresi</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-envelope text-success"></i></span>
+                                    <input type="email" class="form-control bg-light border-0 text-dark" name="email" required placeholder="ornek@mail.com">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold text-uppercase">Şifre</label>
+                                <div class="input-group mb-1">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-key text-success"></i></span>
+                                    <input type="password" class="form-control bg-light border-0 text-dark" name="sifre" required placeholder="••••••••">
+                                </div>
+                                <div class="text-end">
+                                    <a href="/sifre-sifirla" class="text-decoration-none small text-success">Şifremi unuttum</a>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm">Giriş Yap</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card login-card h-100">
+                    <div class="card-header-bagisci text-center py-4">
+                        <i class="bi bi-balloon-heart-fill display-4"></i>
+                        <h4 class="fw-bold mt-2 mb-0">Bağışçı Girişi</h4>
+                    </div>
+                    <div class="card-body p-4 bg-white">
+                        <form action="/login" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold text-uppercase">E-Posta Adresi</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-envelope text-primary"></i></span>
+                                    <input type="email" class="form-control bg-light border-0 text-dark" name="email" required placeholder="ornek@mail.com">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold text-uppercase">Şifre</label>
+                                <div class="input-group mb-1">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-key text-primary"></i></span>
+                                    <input type="password" class="form-control bg-light border-0 text-dark" name="sifre" required placeholder="••••••••">
+                                </div>
+                                <div class="text-end">
+                                    <a href="/sifre-sifirla" class="text-decoration-none small text-primary">Şifremi unuttum</a>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">Giriş Yap</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card login-card h-100">
+                    <div class="card-header-esnaf text-center py-4">
+                        <i class="bi bi-shop display-4"></i>
+                        <h4 class="fw-bold mt-2 mb-0">Esnaf Girişi</h4>
+                    </div>
+                    <div class="card-body p-4 bg-white">
+                        <form action="/login" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold text-uppercase">E-Posta Adresi</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-envelope" style="color:#e67e22;"></i></span>
+                                    <input type="email" class="form-control bg-light border-0 text-dark" name="email" required placeholder="ornek@mail.com">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold text-uppercase">Şifre</label>
+                                <div class="input-group mb-1">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-key" style="color:#e67e22;"></i></span>
+                                    <input type="password" class="form-control bg-light border-0 text-dark" name="sifre" required placeholder="••••••••">
+                                </div>
+                                <div class="text-end">
+                                    <a href="/sifre-sifirla" class="text-decoration-none small" style="color:#e67e22;">Şifremi unuttum</a>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn w-100 fw-bold py-2 shadow-sm text-white" style="background-color: #e67e22;">Giriş Yap</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="adminModal" tabindex="-1" aria-labelledby="adminModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <div class="modal-header bg-dark text-white border-0" style="border-radius: 16px 16px 0 0;">
+                    <h5 class="modal-title fw-bold" id="adminModalLabel"><i class="bi bi-shield-lock-fill me-2"></i>Sistem Yöneticisi Girişi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <form action="/login" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted">Yetkili E-Posta</label>
+                            <input type="email" class="form-control form-control-lg bg-light border-0 text-dark" name="email" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted">Sistem Şifresi</label>
+                            <input type="password" class="form-control form-control-lg bg-light border-0 text-dark" name="sifre" required>
+                            <div class="text-end mt-1">
+                                <a href="/sifre-sifirla" class="text-decoration-none small text-muted">Şifremi unuttum</a>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-dark btn-lg w-100 fw-bold">Yönetim Paneline Bağlan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const sayaclar = document.querySelectorAll('.sayac');
+        const hiz = 100;
+
+        sayaclar.forEach(sayac => {
+            const guncelle = () => {
+                const hedef = +sayac.getAttribute('data-hedef');
+                const mevcut = +sayac.innerText;
+                const artis = hedef / hiz;
+
+                if(mevcut < hedef) {
+                    sayac.innerText = Math.ceil(mevcut + artis);
+                    setTimeout(guncelle, 20);
+                } else {
+                    sayac.innerText = hedef;
+                }
+            };
+            guncelle();
+        });
+    </script>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        // Sayfa yüklendiğinde hafızadaki temayı kontrol et ve uygula
+        const savedTheme = localStorage.getItem('imece_theme') || 'light';
+        htmlElement.setAttribute('data-bs-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('imece_theme', newTheme); // Hafızaya kaydet
+            updateIcon(newTheme);
+        });
+
+        // İkonu değiştiren yardımcı fonksiyon
+        function updateIcon(theme) {
+            if(theme === 'dark') {
+                themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                themeIcon.classList.replace('text-secondary', 'text-warning');
+                themeToggleBtn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+            } else {
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                themeIcon.classList.replace('text-warning', 'text-secondary');
+                themeToggleBtn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+            }
+        }
+    </script>
+    </body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İmece | Sistem Yönetimi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        .navbar { background-color: #212529; transition: background-color 0.3s ease; }
+        .stat-card { border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .table-custom { border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: background-color 0.3s ease; }
+        .search-box { border-radius: 50px; border: 2px solid #e9ecef; transition: all 0.3s; padding: 5px 20px; background-color: #fff; }
+        .search-box:focus-within { border-color: #0d6efd; box-shadow: 0 0 15px rgba(13, 110, 253, 0.1); }
+        .search-input { border: none; box-shadow: none; outline: none; background: transparent; width: 100%; }
+        .search-input:focus { box-shadow: none; background: transparent; }
+        .chart-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; transition: background-color 0.3s ease; }
+
+        /* === GECE MODU (DARK MODE) ÖZEL CSS'İ === */
+        [data-bs-theme="dark"] body { background-color: #121212 !important; color: #e0e0e0; }
+        [data-bs-theme="dark"] .navbar { background-color: #1a1d20 !important; border-bottom: 1px solid #333; }
+        [data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .bg-light, [data-bs-theme="dark"] .chart-container, [data-bs-theme="dark"] .table-custom, [data-bs-theme="dark"] .card { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+        [data-bs-theme="dark"] .text-dark, [data-bs-theme="dark"] h1, [data-bs-theme="dark"] h2, [data-bs-theme="dark"] h3, [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h5, [data-bs-theme="dark"] h6 { color: #ffffff !important; }
+        [data-bs-theme="dark"] .text-muted { color: #a0a0a0 !important; }
+        [data-bs-theme="dark"] .search-box { background-color: #1e1e1e !important; border-color: #444 !important; }
+        [data-bs-theme="dark"] .search-input { color: #fff !important; }
+        [data-bs-theme="dark"] .search-input::placeholder { color: #888 !important; }
+        [data-bs-theme="dark"] .table { color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .table-light th, [data-bs-theme="dark"] .table-light td { background-color: #2b2b2b !important; color: #fff !important; border-color: #444 !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover td, [data-bs-theme="dark"] .table-hover tbody tr:hover th { background-color: #333 !important; color: #fff !important; }
+        [data-bs-theme="dark"] .table td, [data-bs-theme="dark"] .table th { border-color: #444 !important; background-color: transparent !important; }
+        [data-bs-theme="dark"] .shadow-sm { box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important; }
+        [data-bs-theme="dark"] .card-header.bg-warning { background-color: #d39e00 !important; color: #fff !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark py-3 mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shield-lock-fill me-2 text-warning"></i>İMECE YÖNETİM MERKEZİ</a>
+            <div class="d-flex align-items-center">
+                <span class="me-4 text-light"><i class="bi bi-person-badge me-1"></i>Sistem Yöneticisi: <strong class="text-warning">{{ session['adsoyad'] }}</strong></span>
+                <a href="/profil" class="btn btn-outline-secondary btn-sm me-2">👤 Profilim</a>
+                
+                <button class="btn btn-outline-light border-0 me-2 rounded-circle shadow-sm" id="themeToggle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </button>
+                <a href="/logout" class="btn btn-outline-light btn-sm fw-bold"><i class="bi bi-power me-1"></i>Güvenli Çıkış</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for category, message in messages %}
+                <div class="alert alert-{{ category }} fw-bold text-center shadow-sm"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
+            {% endfor %}{% endif %}
+        {% endwith %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><div class="card stat-card bg-primary text-white p-3 text-center h-100"><h2 class="fw-bold mb-0">{{ toplam_talep }}</h2><small class="opacity-75">Sistemdeki Toplam Talep</small></div></div>
+            <div class="col-md-3"><div class="card stat-card bg-warning text-dark p-3 text-center h-100"><h2 class="fw-bold mb-0">{{ bekleyen_talep }}</h2><small class="opacity-75">Bekleyen Talepler</small></div></div>
+            <div class="col-md-3"><div class="card stat-card bg-success text-white p-3 text-center h-100"><h2 class="fw-bold mb-0">{{ tamamlanan_talep }}</h2><small class="opacity-75">Karşılanan Talepler</small></div></div>
+            <div class="col-md-3"><div class="card stat-card bg-dark text-white p-3 text-center h-100"><h2 class="fw-bold mb-0 text-info">{{ toplam_bagis }}</h2><small class="opacity-75">Üretilen Kupon (Bağış)</small></div></div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h5 class="fw-bold text-dark mb-4"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Aylık Talep Yoğunluğu (Bu Yıl)</h5>
+                    <canvas id="aylikGrafik" height="80" data-aylar='{{ grafik_aylar | tojson }}' data-degerler='{{ grafik_degerler | tojson }}'></canvas>
+                </div>
+            </div>
+        </div>
+
+        {% if onay_bekleyen_esnaflar %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning shadow-sm" style="border-radius: 12px;">
+                    <div class="card-header bg-warning text-dark fw-bold border-0" style="border-radius: 12px 12px 0 0;">
+                        <i class="bi bi-shop-window me-2"></i>Güvenlik Onayı Bekleyen Esnaflar
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase bg-light">
+                                        <th class="ps-4">Esnaf / İşletme Adı</th>
+                                        <th>E-Posta Adresi</th>
+                                        <th>Kayıt Tarihi</th>
+                                        <th class="text-end pe-4">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for esnaf in onay_bekleyen_esnaflar %}
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-dark">{{ esnaf[1] }}</td>
+                                        <td class="text-muted">{{ esnaf[2] }}</td>
+                                        <td class="text-muted small">{{ esnaf[3] }}</td>
+                                        <td class="text-end pe-4 d-flex justify-content-end gap-2">
+                                            <form action="/admin/esnaf_onayla/{{ esnaf[0] }}" method="POST">
+                                                <button type="submit" class="btn btn-success btn-sm fw-bold"><i class="bi bi-check-circle me-1"></i>Onayla</button>
+                                            </form>
+                                            <form action="/admin/esnaf_reddet/{{ esnaf[0] }}" method="POST" onsubmit="return confirm('Bu işletmenin başvurusunu tamamen reddetmek istediğinize emin misiniz?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm fw-bold"><i class="bi bi-x-circle me-1"></i>Reddet</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-list-columns-reverse text-primary me-2"></i>Tüm Talepler</h4>
+                    <a href="/admin/rapor_indir" class="btn btn-success fw-bold shadow-sm"><i class="bi bi-file-earmark-excel-fill me-1"></i>Excel Dışa Aktar</a>
+                </div>
+
+                <div class="search-box d-flex align-items-center mb-4 shadow-sm">
+                    <i class="bi bi-search text-muted fs-5"></i>
+                    <input type="text" id="adminArama" class="form-control search-input fs-5" placeholder="Kategori, konum veya durum ara...">
+                </div>
+
+                <div class="table-custom border">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light sticky-top shadow-sm">
+                                <tr class="text-secondary small text-uppercase">
+                                    <th class="ps-4">Kullanıcı</th>
+                                    <th>Kategori</th>
+                                    <th>Konum</th>
+                                    <th>Durum</th>
+                                    <th class="text-end pe-4">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="talepTablosu">
+                                {% for talep in tum_talepler %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ talep[6] | maskele }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ talep[1] }}</span></td>
+                                    <td class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ talep[2] }}</td>
+                                    <td>
+                                        {% if talep[4] == 'Beklemede' %}
+                                            <span class="badge bg-warning text-dark">Bekliyor</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Karşılandı</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4 d-flex justify-content-end gap-2">
+                                        {% if talep[4] == 'Beklemede' %}
+                                        <form action="/admin/talep_tamamla/{{ talep[0] }}" method="POST"><button type="submit" class="btn btn-success btn-sm fw-bold" title="Tamamlandı İşaretle"><i class="bi bi-check-lg"></i></button></form>
+                                        {% endif %}
+                                        <form action="/admin/talep_sil/{{ talep[0] }}" method="POST" onsubmit="return confirm('Bu talebi silmek istediğinize emin misiniz?');"><button type="submit" class="btn btn-danger btn-sm fw-bold" title="Talebi Sil"><i class="bi bi-trash3-fill"></i></button></form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-terminal-fill text-dark me-2"></i>Sistem Logları</h4>
+                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                    <div class="card-body p-0" style="max-height: 600px; overflow-y: auto; background-color: #2b2b2b;">
+                        <ul class="list-group list-group-flush">
+                            {% for log in loglar %}
+                            <li class="list-group-item bg-transparent border-bottom border-secondary p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-info small">{{ log[2] | maskele }} <span class="badge bg-secondary ms-1">{{ log[3] }}</span></strong>
+                                    <small class="text-muted" style="font-size: 0.75rem;">{{ log[1] }}</small>
+                                </div>
+                                <div class="text-light small" style="font-family: monospace;">> {{ log[0] }}</div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('adminArama').addEventListener('keyup', function() {
+            let arananKelime = this.value.toLowerCase();
+            let satirlar = document.querySelectorAll('#talepTablosu tr');
+            satirlar.forEach(satir => {
+                if(satir.innerText.toLowerCase().includes(arananKelime)) {
+                    satir.style.display = '';
+                } else {
+                    satir.style.display = 'none';
+                }
+            });
+        });
+
+        const grafikCanvas = document.getElementById('aylikGrafik');
+        const aylarVerisi = JSON.parse(grafikCanvas.dataset.aylar);
+        const degerlerVerisi = JSON.parse(grafikCanvas.dataset.degerler);
+
+        const ctx = grafikCanvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'line', 
+            data: {
+                labels: aylarVerisi,
+                datasets: [{
+                    label: 'Sisteme Girilen Yeni Talepler',
+                    data: degerlerVerisi,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)', 
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4 
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+    </script>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        // Sayfa açıldığında hafızadaki temayı kontrol et ve uygula
+        const savedTheme = localStorage.getItem('imece_theme') || 'light';
+        htmlElement.setAttribute('data-bs-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('imece_theme', newTheme); // Hafızayı güncelle
+                updateIcon(newTheme);
+            });
+        }
+
+        function updateIcon(theme) {
+            if (!themeIcon || !themeToggleBtn) return;
+            if(theme === 'dark') {
+                themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                themeIcon.classList.replace('text-light', 'text-warning');
+                themeToggleBtn.classList.replace('btn-outline-light', 'btn-outline-warning');
+            } else {
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                themeIcon.classList.replace('text-warning', 'text-light');
+                themeToggleBtn.classList.replace('btn-outline-warning', 'btn-outline-light');
+            }
+        }
+    </script>
+</body>
+</html>

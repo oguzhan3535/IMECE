@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İmece | Esnaf Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', system-ui, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        .navbar { background-color: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: background-color 0.3s ease; }
+        .brand-text { color: #e67e22; font-weight: 900; font-size: 1.7rem; letter-spacing: -0.5px; }
+        .card-custom { border-radius: 16px; border: none; box-shadow: 0 8px 25px rgba(0,0,0,0.04); background: #fff; transition: background-color 0.3s ease; }
+        .search-box { border-radius: 50px; border: 2px solid #e9ecef; transition: all 0.3s; padding: 5px 20px; background-color: transparent; }
+        .search-box:focus-within { border-color: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.1); }
+        .search-input { border: none; box-shadow: none; outline: none; background: transparent; width: 100%; }
+        .search-input:focus { box-shadow: none; background: transparent; }
+        .table-custom { border-radius: 12px; overflow: hidden; transition: background-color 0.3s ease; }
+        .kupon-kodu { font-family: monospace; font-size: 1.2rem; letter-spacing: 2px; color: #e67e22; font-weight: bold;}
+
+        /* === GECE MODU (DARK MODE) ÖZEL CSS'İ === */
+        [data-bs-theme="dark"] body { background-color: #121212 !important; color: #e0e0e0; }
+        [data-bs-theme="dark"] .navbar { background-color: #1e1e1e !important; border-bottom: 1px solid #333; box-shadow: none; }
+        [data-bs-theme="dark"] .card-custom, [data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .table-custom { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+        [data-bs-theme="dark"] .text-dark, [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h5 { color: #ffffff !important; }
+        [data-bs-theme="dark"] .text-muted, [data-bs-theme="dark"] .text-secondary { color: #a0a0a0 !important; }
+        [data-bs-theme="dark"] .search-box { background-color: #1e1e1e !important; border-color: #444 !important; }
+        [data-bs-theme="dark"] .search-input { color: #fff !important; }
+        [data-bs-theme="dark"] .search-input::placeholder { color: #888 !important; }
+        [data-bs-theme="dark"] .bg-light { background-color: #2b2b2b !important; color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .table { color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .table-light th, [data-bs-theme="dark"] .table-light td { background-color: #2b2b2b !important; color: #fff !important; border-color: #444 !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover td { background-color: #333 !important; color: #fff !important; }
+        [data-bs-theme="dark"] .table td, [data-bs-theme="dark"] .table th { border-color: #444 !important; background-color: transparent !important; }
+        [data-bs-theme="dark"] .btn-light { background-color: #2b2b2b !important; border-color: #444 !important; color: #ff6b6b !important; }
+        [data-bs-theme="dark"] .alert-success { background-color: rgba(25, 135, 84, 0.15) !important; color: #a3cfbb !important; border: 1px solid #198754 !important;}
+        [data-bs-theme="dark"] .alert-danger { background-color: rgba(220, 53, 69, 0.15) !important; color: #ea868f !important; border: 1px solid #dc3545 !important;}
+        [data-bs-theme="dark"] .border-danger { border-color: #ea868f !important; color: #ea868f !important;}
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg py-3 mb-4">
+        <div class="container">
+            <a class="navbar-brand brand-text" href="#"><i class="bi bi-shop me-2"></i>İMECE ESNAF</a>
+            <div class="d-flex align-items-center">
+                <span class="me-4 text-secondary"><i class="bi bi-person-circle me-1"></i>Hoş geldin, <strong class="text-dark">{{ session['adsoyad'] }}</strong></span>
+                <a href="/profil" class="btn btn-outline-secondary btn-sm me-2">👤 Profilim</a>
+                
+                <button class="btn btn-outline-secondary border-0 me-2 rounded-circle shadow-sm" id="themeToggle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </button>
+                <a href="/logout" class="btn btn-light text-danger fw-bold border-0 shadow-sm"><i class="bi bi-box-arrow-right me-1"></i>Çıkış</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} fw-bold shadow-sm text-center"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% set t_teslimat = gecmis_islemler|length %}
+        {% set t_kazanc = t_teslimat * 15 %}
+        <div class="row g-3 mb-5">
+            <div class="col-md-4">
+                <div class="card card-custom p-4 border-start border-primary border-4 shadow-sm h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">Toplam Teslimatım</h6>
+                            <h2 class="fw-bold text-dark mb-0">{{ t_teslimat }} Adet</h2>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 text-primary">
+                            <i class="bi bi-box-seam fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom p-4 border-start border-success border-4 shadow-sm h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">Toplam Hak Ediş Bedeli</h6>
+                            <h2 class="fw-bold text-success mb-0">{{ t_kazanc }} ₺</h2>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 text-success">
+                            <i class="bi bi-cash-coin fs-3"></i>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-2" style="font-size: 0.75rem;">* Kupon başına lojistik destek bedeli: <strong>15 ₺</strong></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom p-4 border-start border-warning border-4 shadow-sm h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">Esnaf Dağıtıcı Durumu</h6>
+                            <h2 class="fw-bold text-dark mb-0">
+                                {% if t_teslimat == 0 %}Yeni Ortak
+                                {% elif t_teslimat <= 9 %}Bronz Bayi
+                                {% elif t_teslimat <= 24 %}Gümüş Dağıtıcı
+                                {% elif t_teslimat <= 49 %}Altın Lojistik Merkez
+                                {% elif t_teslimat <= 99 %}Güvenilir
+                                {% else %}Kıdemli <i class="bi bi-patch-check-fill text-primary ms-1"></i>{% endif %}
+                            </h2>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 text-warning">
+                            <i class="bi bi-award fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card card-custom p-4 border-top border-5" style="border-color: #e67e22 !important;">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-qr-code-scan me-2" style="color:#e67e22;"></i>Kupon Doğrula</h4>
+                    <form action="/esnaf" method="POST" class="mb-4">
+                        <div class="input-group input-group-lg mb-3 shadow-sm">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-upc-scan"></i></span>
+                            <input type="text" class="form-control bg-light border-0 fw-bold text-center" name="kupon_kodu" placeholder="KUPON KODU GİRİN" required maxlength="6" style="letter-spacing: 3px; text-transform: uppercase;">
+                            <button type="submit" name="kod_sorgula" class="btn text-white fw-bold px-4" style="background-color: #34495e;">Sorgula</button>
+                        </div>
+                    </form>
+
+                    {% if kupon_detay %}
+                        <div class="alert {% if kupon_detay[2] == 'Active' %}alert-success{% else %}alert-danger{% endif %} border-0 shadow-sm p-4">
+                            <h5 class="fw-bold text-center mb-4">
+                                {% if kupon_detay[2] == 'Active' %}<i class="bi bi-check-circle-fill me-2"></i>Kupon Bulundu!{% else %}<i class="bi bi-x-circle-fill me-2"></i>Geçersiz Kupon{% endif %}
+                            </h5>
+                            <p class="mb-2 text-dark"><strong>İhtiyaç Sahibi:</strong> {{ kupon_detay[3] }}</p>
+                            <p class="mb-3 text-dark"><strong>Verilecek Ürün:</strong> <span class="badge bg-dark fs-6">{{ kupon_detay[4] }}</span></p>
+                            
+                            {% if kupon_detay[2] == 'Active' %}
+                                <form action="/esnaf" method="POST">
+                                    <input type="hidden" name="kupon_id" value="{{ kupon_detay[0] }}">
+                                    <button type="submit" name="kod_onayla" class="btn btn-success btn-lg w-100 fw-bold shadow"><i class="bi bi-box-seam me-2"></i>Ürünü Teslim Et</button>
+                                </form>
+                            {% else %}
+                                <div class="text-center p-3 bg-white rounded border border-danger text-danger fw-bold"><i class="bi bi-lock-fill me-2"></i>Bu kupon daha önce kullanılmış!</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-archive-fill text-secondary me-2"></i>Geçmiş İşlemlerim</h4>
+                    <a href="/esnaf/rapor_indir" class="btn btn-success fw-bold shadow-sm"><i class="bi bi-file-earmark-excel-fill me-2"></i>Excel İndir</a>
+                </div>
+
+                <div class="search-box bg-white d-flex align-items-center mb-4 shadow-sm">
+                    <i class="bi bi-search text-muted fs-5"></i>
+                    <input type="text" id="esnafArama" class="form-control search-input fs-5 text-dark" placeholder="Kupon kodu, İsim veya Ürün ara...">
+                </div>
+
+                <div class="card card-custom p-0 table-custom shadow-sm border border-light">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="text-secondary small text-uppercase">
+                                    <th class="ps-4">Kupon Kodu</th>
+                                    <th>İhtiyaç Sahibi</th>
+                                    <th>Ürün/Paket</th>
+                                    <th class="text-end pe-4">Tarih</th>
+                                </tr>
+                            </thead>
+                            <tbody id="islemTablosu">
+                                {% if gecmis_islemler %}
+                                    {% for islem in gecmis_islemler %}
+                                    <tr>
+                                        <td class="ps-4 kupon-kodu">{{ islem[0] }}</td>
+                                        <td class="fw-bold text-dark">{{ islem[1] }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ islem[2] }}</span></td>
+                                        <td class="text-end pe-4 text-muted small"><i class="bi bi-clock me-1"></i>{{ islem[3] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center py-5 text-muted fw-bold">Henüz bir teslimat yapmadınız.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('esnafArama').addEventListener('keyup', function() {
+            let arananKelime = this.value.toLowerCase();
+            let satirlar = document.querySelectorAll('#islemTablosu tr');
+
+            satirlar.forEach(satir => {
+                if(satir.innerText.toLowerCase().includes(arananKelime)) {
+                    satir.style.display = '';
+                } else {
+                    satir.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        const savedTheme = localStorage.getItem('imece_theme') || 'light';
+        htmlElement.setAttribute('data-bs-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('imece_theme', newTheme);
+                updateIcon(newTheme);
+            });
+        }
+
+        function updateIcon(theme) {
+            if (!themeIcon || !themeToggleBtn) return;
+            if(theme === 'dark') {
+                themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                themeIcon.classList.replace('text-secondary', 'text-warning');
+                themeToggleBtn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+            } else {
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                themeIcon.classList.replace('text-warning', 'text-secondary');
+                themeToggleBtn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+            }
+        }
+    </script>
+</body>
+</html>

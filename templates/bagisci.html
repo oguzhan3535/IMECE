@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İmece | Bağışçı Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        .navbar { background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: background-color 0.3s ease; }
+        .nav-pills .nav-link { color: #555; background-color: #f1f3f5; border-radius: 50px; padding: 8px 20px; font-weight: 600; margin-right: 10px; border: 1px solid #e9ecef;}
+        .nav-pills .nav-link.active { background-color: #198754; color: #fff; box-shadow: 0 2px 10px rgba(25, 135, 84, 0.2); border-color: #198754;}
+        .list-card { background: #fff; border-radius: 12px; border: 1px solid #eaeaea; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: 0.2s; }
+        .list-card:hover { border-color: #198754; }
+        .makbuz-sablonu { display: none; background: white; padding: 40px; border: 2px solid #198754; border-radius: 10px; width: 600px; margin: 0 auto; }
+        
+        /* === GECE MODU (DARK MODE) ÖZEL CSS'İ === */
+        [data-bs-theme="dark"] body { background-color: #121212 !important; color: #e0e0e0; }
+        [data-bs-theme="dark"] .navbar { background-color: #1e1e1e !important; border-bottom: 1px solid #333; box-shadow: none; }
+        [data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .bg-light, [data-bs-theme="dark"] .card, [data-bs-theme="dark"] .list-card { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #333 !important; background-image: none !important; }
+        [data-bs-theme="dark"] .text-dark, [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h5 { color: #ffffff !important; }
+        [data-bs-theme="dark"] .text-muted { color: #a0a0a0 !important; }
+        [data-bs-theme="dark"] .shadow-sm, [data-bs-theme="dark"] .shadow { box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important; }
+        [data-bs-theme="dark"] .nav-pills .nav-link { background-color: #2b2b2b; color: #e0e0e0; border-color: #444; }
+        [data-bs-theme="dark"] .nav-pills .nav-link.active { background-color: #198754; color: #fff; border-color: #198754; }
+        /* Makbuzu gece modunda bile beyaz tutalım ki PDF güzel çıksın */
+        .makbuz-sablonu, .makbuz-sablonu * { background-color: transparent; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg py-3 mb-4">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold text-success" href="/bagisci"><i class="bi bi-heart-fill me-2"></i>İMECE BAĞIŞ AĞI</a>
+            <div class="d-flex align-items-center">
+                <span class="me-4 text-secondary d-none d-md-inline"><i class="bi bi-person-circle me-1"></i><strong>{{ session.adsoyad }}</strong></span>
+                
+                <a href="/profil" class="btn btn-outline-secondary btn-sm me-2">👤 Profilim</a>
+                
+                <button class="btn btn-outline-secondary border-0 me-2 rounded-circle shadow-sm" id="themeToggle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </button>
+                <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-3">
+                    <i class="bi bi-box-arrow-right me-1"></i>Çıkış
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        
+        <script>let bagisBasariliTetikle = false;</script>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} fw-bold text-center shadow-sm rounded-pill mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                    </div>
+                    {% if category == 'success' and 'Bağış başarılı' in message %}
+                        <script>bagisBasariliTetikle = true;</script>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(to right, #ffffff, #f8f9fa);">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between rounded-3 border-start border-4 border-{{ renk }}">
+                <div>
+                    <h4 class="mb-1 fw-bold text-dark">Hoş Geldin, {{ session.adsoyad }}</h4>
+                    <p class="text-muted mb-0">Bugüne kadar toplam <strong class="text-{{ renk }} fs-5">{{ bagis_sayisi }}</strong> bağış yaparak iyilik köprüsüne destek oldunuz.</p>
+                </div>
+                <div class="text-center">
+                    <div class="badge bg-{{ renk }} p-3 rounded-pill shadow fs-6 d-flex align-items-center gap-2">
+                        <i class="bi {{ ikon }} fs-5"></i> 
+                        <span>{{ rutbe }}</span>
+                    </div>
+                    <div class="small text-muted mt-2 fw-bold" style="font-size: 0.7rem;">MEVCUT RÜTBENİZ</div>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#bekleyen" type="button" role="tab">Bekleyen Talepler</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#gecmis" type="button" role="tab">Bağış Geçmişim & Makbuz</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            
+            <div class="tab-pane fade show active" id="bekleyen" role="tabpanel">
+                <div class="card p-4 border-0 shadow-sm" style="border-radius: 12px;">
+                    <h5 class="fw-bold text-dark mb-4">Yardım Bekleyenler</h5>
+                    
+                    {% for t in talepler %}
+                    <div class="list-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 me-2">{{ t.kategori }}</span>
+                                <h5 class="fw-bold mt-3 mb-1 text-dark">{{ t.detay }}</h5>
+                                <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>{{ t.konum }} • {{ t.tarih }}</p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary fs-6">{{ t.karsilanan }} / {{ t.istenen }} Karşılandı</span>
+                            </div>
+                        </div>
+
+                        <div class="progress mb-3" style="height: 12px; border-radius: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ t.yuzde }}%;" aria-valuenow="{{ t.yuzde }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a href="/odeme/{{ t.id }}" class="btn btn-outline-success fw-bold px-4 rounded-pill shadow-sm"><i class="bi bi-heart me-2"></i>Kalanı Tamamla</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-light border text-center text-muted fw-bold">Şu an aktif yardım talebi bulunmuyor.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="gecmis" role="tabpanel">
+                <div class="card p-4 border-0 shadow-sm" style="border-radius: 12px;">
+                    <h5 class="fw-bold text-dark mb-4"><i class="bi bi-award text-warning me-2"></i>Yaptığım Bağışlar</h5>
+                    
+                    {% for b in gecmis_bagislar %}
+                    <div class="list-card d-flex justify-content-between align-items-center border-start border-4 border-warning">
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark">{{ b.1 }} Desteği</h5>
+                            <p class="text-muted small mb-0">İşlem Kodu: <strong class="text-dark">{{ b.3 }}</strong> • Tutar: <strong class="text-success">{{ b.2 }} TL</strong></p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-dark fw-bold px-3 btn-sm rounded-pill" onclick="pdfIndir('{{ b.3 }}', '{{ b.1 }}', '{{ b.2 }}')">
+                                <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>PDF Makbuz
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-light border text-center text-muted fw-bold">Henüz bir bağış kaydınız yok.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="makbuz-alani" class="makbuz-sablonu" style="background: white !important; color: black !important;">
+        <div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px;">
+            <h2 style="color: #198754 !important; font-weight: bold; margin: 0;">İMECE PROJESİ</h2>
+            <p style="color: #666 !important; margin: 5px 0 0 0;">Resmi Bağış Makbuzu</p>
+        </div>
+        <table style="width: 100%; line-height: 2.5;">
+            <tr>
+                <td style="color: #666 !important; font-weight: bold;">Bağışçı Adı:</td>
+                <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: black !important;">{{ session.adsoyad }}</td>
+            </tr>
+            <tr>
+                <td style="color: #666 !important; font-weight: bold;">Destek Kategorisi:</td>
+                <td id="pdf-kat" style="text-align: right; color: black !important;">-</td>
+            </tr>
+            <tr>
+                <td style="color: #666 !important; font-weight: bold;">Kupon / Takip Kodu:</td>
+                <td id="pdf-kod" style="text-align: right; color: #0d6efd !important; font-family: monospace; font-weight: bold;">-</td>
+            </tr>
+            <tr>
+                <td style="color: #666 !important; font-weight: bold;">Toplam Bağış Tutarı:</td>
+                <td id="pdf-tut" style="text-align: right; color: #198754 !important; font-size: 1.2em; font-weight: bold;">-</td>
+            </tr>
+        </table>
+        <div style="text-align: center; margin-top: 40px; color: #888 !important; font-size: 0.9em; font-style: italic;">
+            Bu belge elektronik olarak oluşturulmuştur.<br>İmece sosyal dayanışma ağına katkılarınızdan dolayı teşekkür ederiz.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function pdfIndir(kod, kategori, tutar) {
+            document.getElementById('pdf-kod').innerText = kod;
+            document.getElementById('pdf-kat').innerText = kategori;
+            document.getElementById('pdf-tut').innerText = tutar + " TL";
+
+            const element = document.getElementById('makbuz-alani');
+            element.style.display = 'block';
+
+            const opt = {
+                margin: 0.5,
+                filename: 'Imece_Makbuz_' + kod + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = 'none';
+            });
+        }
+    </script>
+
+    <script>
+        if (typeof bagisBasariliTetikle !== 'undefined' && bagisBasariliTetikle) {
+            var duration = 3 * 1000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                // Sol taraftan fırlat
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#198754', '#0d6efd', '#ffc107', '#e67e22']
+                });
+                // Sağ taraftan fırlat
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#198754', '#0d6efd', '#ffc107', '#e67e22']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+    </script>
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        const savedTheme = localStorage.getItem('imece_theme') || 'light';
+        htmlElement.setAttribute('data-bs-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('imece_theme', newTheme);
+                updateIcon(newTheme);
+            });
+        }
+
+        function updateIcon(theme) {
+            if (!themeIcon || !themeToggleBtn) return;
+            if(theme === 'dark') {
+                themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                themeIcon.classList.replace('text-secondary', 'text-warning');
+                themeToggleBtn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+            } else {
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                themeIcon.classList.replace('text-warning', 'text-secondary');
+                themeToggleBtn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+            }
+        }
+    </script>
+    </body>
+</html>
